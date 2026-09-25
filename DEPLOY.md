@@ -24,12 +24,19 @@ setting matches the directory of your package.json file.
 
 | Setting | Value | Why |
 |---|---|---|
-| `installCommand` | installs root, then `apps/trader` | The root install puts `next` in the root `node_modules` where Vercel's builder looks for it. The second installs what the app actually compiles against. |
+| `installCommand` | installs `apps/trader` first, then the root | The app install provides what the build compiles against. The root install puts `next` in the root `node_modules`, where Vercel's builder looks for it. |
 | `buildCommand` | `npm --prefix apps/trader run build` | Builds the app in its own directory. |
 | `outputDirectory` | `apps/trader/.next` | Points Vercel at the build output, which is not at the root. |
 
 Plus `next` pinned in the root `package.json` `devDependencies`, purely so
 framework detection succeeds. Keep that version in step with `apps/trader`.
+
+**The install order matters and is not cosmetic.** Running the root install
+first and `npm --prefix apps/trader install` second leaves the root
+`node_modules` holding only stray native binaries, with no `next` to resolve.
+Installing the app first, in a subshell so the working directory is restored,
+and the root last, leaves `next` resolvable at both levels. Verified by wiping
+both `node_modules` in a fresh clone and re-running.
 
 `apps/trader/next.config.mjs` also skips `output: 'standalone'` when `VERCEL` is
 set, because Vercel builds Next.js natively and does not consume a standalone
