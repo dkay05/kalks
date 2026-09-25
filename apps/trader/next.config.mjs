@@ -12,8 +12,13 @@ const __dirname = path.dirname(__filename);
 
 const isDev = process.env.NODE_ENV !== 'production';
 
+/* Vercel builds Next.js natively and does not consume a standalone bundle;
+   emitting one there is wasted work and can confuse output detection. Keep
+   it for Docker and any self-hosted target. */
+const isVercel = Boolean(process.env.VERCEL);
+
 const nextConfig = {
-  output: 'standalone',
+  ...(isVercel ? {} : { output: 'standalone' }),
   outputFileTracingRoot: __dirname,
   reactStrictMode: true,
   ...(isDev && {
@@ -37,6 +42,11 @@ const nextConfig = {
   generateBuildId: async () => {
     const v = process.env.NEXT_PUBLIC_APP_VERSION?.trim();
     if (v) return v.replace(/[^a-zA-Z0-9._-]/g, '-').slice(0, 48) || 'release';
+    /* On Vercel the commit gives every deploy a fresh id. Without it each
+       build would reuse the literal 'development' id and browsers would
+       serve stale _next/static chunks after a deploy. */
+    const sha = process.env.VERCEL_GIT_COMMIT_SHA?.trim();
+    if (sha) return sha.slice(0, 12);
     return 'development';
   },
   images: {
