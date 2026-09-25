@@ -1,0 +1,7 @@
+# Only apps/trader is deployed (see vercel.json). Keeping the other two
+# apps and the loose reference material out of the upload makes the build
+# smaller and faster; nothing here is imported by the trader app.
+apps/web
+apps/admin
+nexola
+docs
